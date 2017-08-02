@@ -67,8 +67,10 @@ void config_init(void)
   OCR1B = 0;
   //ICR1 = 512;//31khz
   //ICR1 = 384; // 41Khz
-  ICR1 = 192;
-  //ICR1 = 164; // 96Khz OK
+  //ICR1 = 192;
+  //ICR1 = 164; // 96Khz
+  ICR1 = 96; // OK
+  //ICR1 = 144; // OK
   //__________________________
 
 
@@ -94,7 +96,7 @@ void config_init(void)
   TCCR0B = 0;// same for TCCR0B
   TCNT0  = 0;//initialize counter value to 0
   // set compare match register for 2khz increments
-  OCR0A = 12; // 50uS  //150; 
+  OCR0A = 9; // 52uS  //150; 
   // turn on CTC mode
   TCCR0A |= (1 << WGM01);
   // Set CS01 and CS00 bits for 64 prescaler

@@ -27,68 +27,68 @@
 
 
 
-const unsigned short NOTES_TABLE_PWM[61+5] = {136
-,144
-,153
-,162
-,171
-,182
-,192
-,204
-,216
-,229
-,242
-,257
-,272
-,288
-,305
-,324
-,343
-,363
-,385
-,408
-,432
-,458
-,485
-,514
-,544
-,577
-,611
-,647
-,686
-,726
-,770
-,815
-,864
-,915
-,970
-,1027
-,1088
-,1153
-,1222
-,1294
-,1371
-,1453
-,1539
-,1631
-,1728
-,1830
-,1939
-,2055
-,2177
-,2306
-,2443
-,2589
-,2743
-,2906
-,3078
-,3261
-,3455
-,3661
-,3878
-,4109
-,4353};
-// last valid pwm value: 200
+const unsigned short NOTES_TABLE_PWM[61+5] = {382
+,361
+,341
+,321
+,303
+,286
+,270
+,255
+,241
+,227
+,215
+,202
+,191
+,180
+,170
+,161
+,152
+,143
+,135
+,128
+,120
+,114
+,107
+,101
+,96
+,90
+,85
+,80
+,76
+,72
+,68
+,64
+,60
+,57
+,54
+,51
+,48
+,45
+,43
+,40
+,38
+,36
+,34
+,32
+,30
+,28
+,27
+,25
+,24
+,23
+,21
+,20
+,19
+,18
+,17
+,16
+,15
+,14
+,13
+,13
+,12};
+
 
 MidiInfo midiInfo;
 byte midiStateMachine=MIDI_STATE_IDLE;
@@ -130,6 +130,12 @@ volatile unsigned int glissCounter; // incremented in lfo interrupt
 
 static KeyPressedInfo keysPressed[KEYS_PRESSED_LEN];
 
+// Poliphonic management
+#define VCOS_KEYS_LEN       VCOS_LEN
+static KeyPressedInfo vcosKeys[VCOS_KEYS_LEN];
+static byte deleteVCOKey(byte note);
+
+
 void midi_init(void)
 {
   byte i;
@@ -137,6 +143,9 @@ void midi_init(void)
 
   for(i=0; i<KEYS_PRESSED_LEN; i++)
     keysPressed[i].flagFree=1;
+
+  for(i=0; i<VCOS_KEYS_LEN; i++)
+    vcosKeys[i].flagFree=1;
 
   repeatKeyIndex=0;
   voicesMode = MIDI_MODE_MONO_KEYS_BOTH_SIDES;
@@ -223,6 +232,9 @@ void midi_analizeMidiInfo(MidiInfo * pMidiInfo)
         else if(pMidiInfo->cmd==MIDI_CMD_NOTE_OFF)
         {
           // NOTE OFF
+          byte vcoIndexToTurnOff = deleteVCOKey(pMidiInfo->note);
+          vcos_turnOff(vcoIndexToTurnOff);
+          
           if(deleteKey(pMidiInfo->note))
           {
             if(thereAreNoKeysPressed())
@@ -717,6 +729,47 @@ static byte getNextKeyForRepeat(void)
 
 
 
+// **************** Poliphonic management
+
+static byte saveVCOKey(byte note)
+{
+  byte i;
+  for(i=0; i<VCOS_KEYS_LEN; i++)
+  {
+    if(vcosKeys[i].flagFree==1)
+    {
+        vcosKeys[i].flagFree=0;
+        vcosKeys[i].note = note;
+        return i;
+    }
+  }
+  return 0xFF; // no more space
+}
+static byte getIndexOfVCOKey(byte note)
+{
+  byte i;
+  for(i=0; i<VCOS_KEYS_LEN; i++)
+  {
+    if(vcosKeys[i].flagFree==0)
+    {
+        if(vcosKeys[i].note == note)
+          return i;
+    }
+  }
+  return 0xFF; 
+}
+
+static byte deleteVCOKey(byte note)
+{
+    byte index = getIndexOfVCOKey(note);
+    if(index<VCOS_KEYS_LEN)
+    {
+      vcosKeys[index].flagFree=1;
+      return index;
+    }
+    return 0xFF;
+}
+
 static void setVCOs(byte note)
 {
       unsigned char noteNumberVco1;
@@ -727,51 +780,38 @@ static void setVCOs(byte note)
       unsigned char scaleVco2;              
       unsigned char note1=note;
       unsigned char note2=note;
-      
-      if(voicesMode==MIDI_MODE_DUAL_KEYS_BOTH_SIDES)
-      {
-          note1 = getTheHighestKeyPressed();
-          if(note1==0x00)
-            note1=note;
-            
-          note2 = getTheLowestKeyPressed();
-          if(note2==0xFF)
-              note2=note;  
-      }  
 
-      // change octave
-      noteNumberVco1 = changeOctave(currentOctaveVco1,note1);
-      noteNumberVco2 = changeOctave(currentOctaveVco2,note2);
-      //______________
-      
-      // change tune
-      pwmValVco1 = changeTune(currentTuneVco1,noteNumberVco1,&scaleVco1);
-      pwmValVco2 = changeTune(currentTuneVco2,noteNumberVco2,&scaleVco2);              
-      //____________
 
-      vocs_setFrqVCO1(pwmValVco1);
-      vocs_setFrqVCO2(pwmValVco2);
-      
-    /*
-      if(scaleVco1==0)
+      byte vcoIndex = saveVCOKey(note);
+      if(vcoIndex!=0xFF)
       {
-        digitalWrite(PIN_VCO1_SCALE, LOW);
-      }
-      else
-      {
-        digitalWrite(PIN_VCO1_SCALE, HIGH);
-      }
-      if(scaleVco2==0)                
-      {
-        digitalWrite(PIN_VCO2_SCALE, LOW);
-      }
-      else
-      {
-        digitalWrite(PIN_VCO2_SCALE, HIGH);                
-      }
-      OCR1B = pwmValVco1;    
-      OCR1A = pwmValVco2;          
-      */
-      
+        /*
+        if(voicesMode==MIDI_MODE_DUAL_KEYS_BOTH_SIDES)
+        {
+            note1 = getTheHighestKeyPressed();
+            if(note1==0x00)
+              note1=note;
+              
+            note2 = getTheLowestKeyPressed();
+            if(note2==0xFF)
+                note2=note;  
+        } */ 
+  
+        // change octave
+        noteNumberVco1 = changeOctave(currentOctaveVco1,note1);
+        //noteNumberVco2 = changeOctave(currentOctaveVco2,note2);
+        //______________
+        
+        // change tune
+        pwmValVco1 = changeTune(currentTuneVco1,noteNumberVco1,&scaleVco1);
+        //pwmValVco2 = changeTune(currentTuneVco2,noteNumberVco2,&scaleVco2);              
+        //____________
+  
+        vcos_setFrqVCO(vcoIndex,pwmValVco1);
+        
+        // Execute EG for this vco
+        // TODO
+        
+      }      
 }
 

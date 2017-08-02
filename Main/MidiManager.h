@@ -49,7 +49,6 @@
 
 #define MIDI_MODES_LEN                  5
 
-
 typedef struct S_MidiInfo {
   byte channel;
   byte cmd;
