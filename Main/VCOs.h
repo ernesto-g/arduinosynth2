@@ -7,4 +7,5 @@ void vcos_calculateOuts(void);
 
 void vcos_setFrqVCO(unsigned char vcoIndex,unsigned short val);
 void vcos_turnOff(unsigned char vcoIndex);
+void vcos_egStateMachine(void);
 

@@ -96,7 +96,10 @@ void config_init(void)
   TCCR0B = 0;// same for TCCR0B
   TCNT0  = 0;//initialize counter value to 0
   // set compare match register for 2khz increments
-  OCR0A = 9; // 52uS  //150; 
+
+  OCR0A = 12; // 52uS 
+  //OCR0A = 9; // 42uS // falla recepcion uart
+
   // turn on CTC mode
   TCCR0A |= (1 << WGM01);
   // Set CS01 and CS00 bits for 64 prescaler

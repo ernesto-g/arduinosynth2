@@ -81,6 +81,9 @@ void loop() {
 
     ain_state_machine();
 
+    vcos_egStateMachine();
+
+
     /*
     frontp_state_machine();
 

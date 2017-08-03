@@ -335,6 +335,7 @@ extern volatile unsigned int btnPressedCounter;
 extern volatile unsigned int sequenceNoteDurationCounter;
 static volatile unsigned int repeatCounterMultiplier;
 extern volatile unsigned int glissCounter;
+extern volatile unsigned int egCounter;
 
 static volatile unsigned char lfoIntDivider=0;
 
@@ -342,7 +343,7 @@ ISR(TIMER0_COMPA_vect) // 8.6uS
 {
 
   vcos_calculateOuts();
-  return ;
+  //return ;
 
   //digitalWrite(13,HIGH);
 
