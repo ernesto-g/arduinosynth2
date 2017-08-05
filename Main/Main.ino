@@ -28,6 +28,10 @@ volatile unsigned char bufferRx[8];
 volatile unsigned char bufferRxIndex=0;
 volatile unsigned char bufferRxNewPacket=0;
 
+
+
+
+
 ISR(USART_RX_vect)
 {
     if(bufferRxNewPacket==0)
@@ -62,7 +66,12 @@ void loop() {
   // prueba pin de led como salida
   pinMode(13,OUTPUT);
   OCR1B = 512;    
-  OCR1A = 512;              
+  OCR1A = 512;     
+  USART_Transmit('h');         
+  USART_Transmit('o');         
+  USART_Transmit('l');         
+  USART_Transmit('a');         
+  printHex(0x5F);
   //______________________________
 
 
@@ -71,6 +80,10 @@ void loop() {
     // MIDI Reception
     if(bufferRxNewPacket)
     {
+       //printHex(bufferRx[0]);
+       //printHex(bufferRx[1]);
+       //printHex(bufferRx[2]);
+       
         midi_stateMachine(bufferRx[0]);
         midi_stateMachine(bufferRx[1]);
         midi_stateMachine(bufferRx[2]);      

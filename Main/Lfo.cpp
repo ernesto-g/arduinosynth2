@@ -339,6 +339,11 @@ extern volatile unsigned int egCounter;
 
 static volatile unsigned char lfoIntDivider=0;
 
+// VCA modulation
+extern volatile unsigned char lfoValueForVCAInPanel; // 127 max
+extern volatile unsigned char lfoValueForVCA; // 128 max
+//_____
+
 ISR(TIMER0_COMPA_vect) // 8.6uS
 {
 
@@ -375,6 +380,13 @@ ISR(TIMER0_COMPA_vect) // 8.6uS
             OCR2B = 0;
           break;
       }  
+
+      // VCA modulation
+      //lfoCurrentValue = OCR2B;
+      lfoValueForVCA = OCR2B/2; // (((unsigned short)(OCR2B/2))*lfoValueForVCAInPanel)/128;
+      //________________
+      
+      
       repeatCounterMultiplier++;
       if(repeatCounterMultiplier>=40) // 25ms
       {
@@ -408,19 +420,17 @@ void lfo_setWaveType(unsigned char type)
 }
 
 /**
- * fm: 0 to 1023
+ * fm: 0 to 255
  */
 void lfo_setFrequencyMultiplier(unsigned int fm)
 {   
-    freqMultiplier = pgm_read_byte_near(FMULTI_POT_TABLE + (fm>>2) );    
+    freqMultiplier = pgm_read_byte_near(FMULTI_POT_TABLE + fm);    
 }
 
 void lfo_reset(void)
 {
     lfoCounter=0;
 }
-
-
 
 
 

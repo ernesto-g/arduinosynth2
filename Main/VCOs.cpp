@@ -6,7 +6,8 @@
 static volatile unsigned short n[VCOS_LEN];
 static volatile unsigned short freqMultiplier[VCOS_LEN];
 static volatile unsigned short freqMultiplierHalf[VCOS_LEN];
-static volatile unsigned char lfoValueForVCA; // 128 max
+volatile unsigned char lfoValueForVCA; // 128 max
+volatile unsigned char lfoValueForVCAInPanel; // 127 max
 
 // EG management
 #define EG_STATE_IDLE             0
@@ -39,7 +40,8 @@ void vcos_init(void)
     eg[i] = EG_MAX_VALUE;
     egState[i] = EG_STATE_IDLE;
   }
-  lfoValueForVCA = 128;
+  lfoValueForVCA = 0;
+  lfoValueForVCAInPanel=0;
 }
 
 void vcos_calculateOuts(void)
@@ -68,7 +70,7 @@ void vcos_calculateOuts(void)
         n[i]=0;
       }           
     }
-    OCR1B = ((acc*lfoValueForVCA)/128) + (3*EG_MAX_VALUE);
+    OCR1B = (((acc*lfoValueForVCA)/128)*lfoValueForVCAInPanel)/128 + (((acc))*(128-lfoValueForVCAInPanel))/128 + (3*EG_MAX_VALUE);
 
     acc = 0;
     for(i=3; i<6;i++)
@@ -89,7 +91,7 @@ void vcos_calculateOuts(void)
         n[i]=0;
       }           
     }
-    OCR1A = ((acc*lfoValueForVCA)/128) + (3*EG_MAX_VALUE);
+    OCR1A = (((acc*lfoValueForVCA)/128)*lfoValueForVCAInPanel)/128 + (((acc))*(128-lfoValueForVCAInPanel))/128 + (3*EG_MAX_VALUE);
 
     egCounter++;
 
@@ -184,4 +186,25 @@ void vcos_egStateMachine(void)
     indexStateMachine=0;
 }
 
+void vcos_setEg1Attack(byte value)
+{
+  eg1Attack = value;
+}
+void vcos_setEg2Attack(byte value)
+{
+  eg2Attack = value;
+}
+void vcos_setEg1Release(byte value)
+{
+  eg1Release = value;
+}
+void vcos_setEg2Release(byte value)
+{
+  eg2Release = value;
+}
+
+void vcos_setLfoForVCAModulation(byte value)
+{
+  lfoValueForVCAInPanel = value;  
+}
 

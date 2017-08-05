@@ -29,7 +29,8 @@ void config_init(void);
 #define PIN_BUTTON        13
 #define PIN_GLISS_SWITCH  2
 
-   
+void USART_Transmit( unsigned char data );
+void printHex(byte val);   
 
 
 

@@ -27,67 +27,67 @@
 
 
 
-const unsigned short NOTES_TABLE_PWM[61+5] = {382
-,361
-,341
-,321
-,303
-,286
-,270
-,255
-,241
-,227
-,215
-,202
-,191
-,180
-,170
-,161
-,152
-,143
-,135
-,128
-,120
-,114
-,107
-,101
-,96
-,90
-,85
-,80
-,76
-,72
-,68
-,64
-,60
-,57
-,54
-,51
-,48
-,45
-,43
-,40
-,38
-,36
-,34
-,32
-,30
+const unsigned short NOTES_TABLE_PWM[61] = {294
+,278
+,262
+,247
+,233
+,220
+,208
+,196
+,185
+,175
+,165
+,156
+,147
+,139
+,131
+,124
+,117
+,110
+,104
+,98
+,93
+,87
+,83
+,78
+,74
+,69
+,65
+,62
+,58
+,55
+,52
+,49
+,46
+,44
+,41
+,39
+,37
+,35
+,33
+,31
+,29
 ,28
-,27
+,26
 ,25
-,24
 ,23
+,22
 ,21
-,20
 ,19
 ,18
 ,17
 ,16
 ,15
+,15
 ,14
 ,13
-,13
-,12};
+,12
+,12
+,11
+,10
+,10
+,9};
 
 
 MidiInfo midiInfo;
@@ -95,8 +95,6 @@ byte midiStateMachine=MIDI_STATE_IDLE;
 unsigned char voicesMode;
 
 void midi_analizeMidiInfo(MidiInfo * pMidiInfo);
-static unsigned char changeOctave(unsigned char currentOctave, unsigned char noteNumber);
-static unsigned short changeTune(signed int currentTune,unsigned char noteNumber,unsigned char* pScale);
 static void showMode(void);
 static byte saveKey(byte note);
 static byte getIndexOfPressedKey(byte note);
@@ -106,12 +104,9 @@ static byte getTheLowestKeyPressed(void);
 static byte getTheHighestKeyPressed(void);
 static void setVCOs(byte note);
 static byte getNextKeyForRepeat(void);
+static void setMidiControl(byte control, byte value);
 
 
-static unsigned char currentOctaveVco1;
-static unsigned char currentOctaveVco2;
-static signed int currentTuneVco1;
-static signed int currentTuneVco2;
 static unsigned int currentRepeatValue;
 static unsigned char repeatRunning;
 static unsigned char repeatOn;
@@ -136,6 +131,8 @@ static KeyPressedInfo vcosKeys[VCOS_KEYS_LEN];
 static byte deleteVCOKey(byte note);
 
 
+
+
 void midi_init(void)
 {
   byte i;
@@ -157,8 +154,6 @@ void midi_init(void)
   OCR1A = pwmVal;    
   OCR1B = pwmVal;  
 
-  currentOctaveVco1 = OCTAVE_ZERO;
-  currentOctaveVco2 = OCTAVE_ZERO;
   repeatCounter = 0;
   repeatRunning=0;
   repeatOn=0;
@@ -171,12 +166,7 @@ void midi_init(void)
   showMode();
 }
 
-/*
-  MODE 0 : No key priority: last key pressed is valid
-  MODE 1 : Lower key priority: key is valid if it has lower freq than last one
-  MODE 2 : 2 voices mode:  The lowest key is played on VCO2. The highest key is played on VCO1
-  MODE 3 : Sequence mode. Record and play sequence.   
-*/
+
 void midi_analizeMidiInfo(MidiInfo * pMidiInfo)
 {
     if(pMidiInfo->channel==MIDI_CURRENT_CHANNEL)
@@ -263,6 +253,14 @@ void midi_analizeMidiInfo(MidiInfo * pMidiInfo)
               seq_endRecordNote();
           }
 
+        }
+        else if(pMidiInfo->cmd==MIDI_CMD_CONTROL_CHANGE)
+        {
+            byte controlNumber = pMidiInfo->note;
+            byte controlValue = pMidiInfo->vel;
+            printHex(controlNumber);
+            printHex(controlValue);     
+            setMidiControl(controlNumber, controlValue);
         }
         else
         {
@@ -438,25 +436,6 @@ void midi_repeatManager(void)
 }
 
 
-void midi_setOctaveVco1(byte octave)
-{
-  currentOctaveVco1 = octave;    
-}
-void midi_setOctaveVco2(byte octave)
-{
-    currentOctaveVco2 = octave;
-  
-}
-
-void midi_setTuneVco1(signed int tuneValue)
-{
-    currentTuneVco1 = tuneValue;
-}
-void midi_setTuneVco2(signed int tuneValue)
-{
-    currentTuneVco2 = tuneValue;
-}
-
 void midi_setRepeatValue(unsigned int repeatVal)
 {
   if(voicesMode==MIDI_MODE_SECUENCER)
@@ -535,54 +514,6 @@ void midi_buttonPressedShortCallback(void)
     }
 }
 
-static unsigned char changeOctave(unsigned char currentOctave, unsigned char noteNumber)
-{
-    switch(currentOctave)
-    {
-        case OCTAVE_MINUS_TWO:
-          if( noteNumber>=(36+24) )
-            noteNumber-=24;
-          break;
-        case OCTAVE_MINUS_ONE:
-          if( noteNumber>=(36+12) )
-            noteNumber-=12;
-          break;                    
-        case OCTAVE_PLUS_ONE:
-          if( noteNumber<=(96-12) )
-            noteNumber+=12;
-          break;
-        case OCTAVE_PLUS_TWO:
-          if( noteNumber<=(96-24) )
-            noteNumber+=24;
-          break;                    
-    }
-    return noteNumber;
-}
-
-
-static unsigned short changeTune(signed int currentTune,unsigned char noteNumber,unsigned char* pScale)
-{
-      if(noteNumber<=66)
-        *pScale=0;
-      else
-        *pScale=1;
-      
-      unsigned char n = noteNumber-36;
-      signed long pwmP4;// =  NOTES_TABLE_PWM[n+4];
-      signed long pwm0; // =  NOTES_TABLE_PWM[n];
-
-      if(n<=26 || n>=31 ) // same scale. calculate delta for 4 notes deviation
-      {
-        pwmP4 =  NOTES_TABLE_PWM[n+4];
-        pwm0 =  NOTES_TABLE_PWM[n];
-      }
-      else
-      { // the note is in the middle of the pwm scale, adjacent delta is used
-        pwmP4 =  NOTES_TABLE_PWM[30];
-        pwm0 =  NOTES_TABLE_PWM[26];        
-      }
-      return  ((unsigned short)( ( ((signed long)currentTune) * (pwmP4 - pwm0)) / 512 )) + NOTES_TABLE_PWM[n];      
-}
 
 static void showMode(void)
 {
@@ -772,46 +703,58 @@ static byte deleteVCOKey(byte note)
 
 static void setVCOs(byte note)
 {
-      unsigned char noteNumberVco1;
-      unsigned char noteNumberVco2;
-      unsigned short pwmValVco1;
-      unsigned short pwmValVco2;
-      unsigned char scaleVco1;
-      unsigned char scaleVco2;              
-      unsigned char note1=note;
-      unsigned char note2=note;
-
-
       byte vcoIndex = saveVCOKey(note);
       if(vcoIndex!=0xFF)
-      {
-        /*
-        if(voicesMode==MIDI_MODE_DUAL_KEYS_BOTH_SIDES)
-        {
-            note1 = getTheHighestKeyPressed();
-            if(note1==0x00)
-              note1=note;
-              
-            note2 = getTheLowestKeyPressed();
-            if(note2==0xFF)
-                note2=note;  
-        } */ 
-  
-        // change octave
-        noteNumberVco1 = changeOctave(currentOctaveVco1,note1);
-        //noteNumberVco2 = changeOctave(currentOctaveVco2,note2);
-        //______________
-        
-        // change tune
-        pwmValVco1 = changeTune(currentTuneVco1,noteNumberVco1,&scaleVco1);
-        //pwmValVco2 = changeTune(currentTuneVco2,noteNumberVco2,&scaleVco2);              
-        //____________
-  
-        vcos_setFrqVCO(vcoIndex,pwmValVco1);
-        
-        // Execute EG for this vco
-        // TODO
-        
+      {  
+        vcos_setFrqVCO(vcoIndex,NOTES_TABLE_PWM[note-36]); 
       }      
 }
+
+
+
+static void setMidiControl(byte control, byte value)
+{
+  switch(control)
+  {
+      case MIDI_CONTROL_EG1_ATTACK:
+      {
+        vcos_setEg1Attack(value);
+        break;
+      }
+      case MIDI_CONTROL_EG1_RELEASE:
+      {
+        vcos_setEg1Release(value);
+        break;
+      }
+      case MIDI_CONTROL_EG2_ATTACK:
+      {
+        //vcos_setEg2Attack(value);
+        break;
+      }
+      case MIDI_CONTROL_EG2_RELEASE:
+      {
+        //vcos_setEg2Release(value);        
+        break;
+      }
+      case MIDI_CONTROL_LFO_SPEED:
+      {
+        lfo_setFrequencyMultiplier(value*2);
+        break;
+      }
+      case MIDI_CONTROL_VCA_LFO_MODULATION:
+      {
+        vcos_setLfoForVCAModulation(value);
+        break;
+      }
+      case MIDI_CONTROL_VCA_EG1_MODULATION:
+      {
+        break;
+      }
+      case MIDI_CONTROL_REPEAT:
+      {
+        break;
+      }
+  }
+}
+
 

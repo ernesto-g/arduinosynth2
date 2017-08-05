@@ -18,22 +18,16 @@
 #define MIDI_CURRENT_CHANNEL  0
 #define MIDI_CMD_NOTE_ON  144
 #define MIDI_CMD_NOTE_OFF  128
+#define MIDI_CMD_CONTROL_CHANGE 0xB0
+
 
 #define MIDI_STATE_IDLE       0
 #define MIDI_STATE_RVC_DATA1  1
 #define MIDI_STATE_RVC_DATA2  2
 
-
 #define GLISS_STATE_IDLE                0
 #define GLISS_STATE_CHANGE_NOTE         1
 #define GLISS_STATE_WAIT_NOTE_DURATION  2
-
-
-#define OCTAVE_MINUS_TWO  0
-#define OCTAVE_MINUS_ONE  1
-#define OCTAVE_ZERO       2
-#define OCTAVE_PLUS_ONE   3
-#define OCTAVE_PLUS_TWO   4
 
 #define OUT_MODE0     0
 #define OUT_MODE1     1
@@ -48,6 +42,17 @@
 #define MIDI_MODE_SECUENCER             4
 
 #define MIDI_MODES_LEN                  5
+
+#define MIDI_CONTROL_EG1_ATTACK             0x4A
+#define MIDI_CONTROL_EG1_RELEASE            0x47
+#define MIDI_CONTROL_EG2_ATTACK             0x49
+#define MIDI_CONTROL_EG2_RELEASE            0x48
+#define MIDI_CONTROL_LFO_SPEED              0x4B
+#define MIDI_CONTROL_VCA_LFO_MODULATION     0x4D
+#define MIDI_CONTROL_VCA_EG1_MODULATION     0x4C
+#define MIDI_CONTROL_REPEAT                 0x4E
+
+
 
 typedef struct S_MidiInfo {
   byte channel;

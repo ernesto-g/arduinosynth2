@@ -31,7 +31,7 @@ void config_init(void)
     UBRR0H = (uint8_t)(BAUD_PRESCALE >> 8);
     UCSR0B =
         /* interrupt on receive */
-        (1 << RXCIE0) |
+        (1 << RXCIE0) | (1 << TXEN0) |
         (1 << RXEN0);
     UCSR0C =
         /* no parity bit */
@@ -128,4 +128,33 @@ void config_init(void)
   //__________
    
  }
+
+
+void USART_Transmit( unsigned char data )
+{
+ /* Wait for empty transmit buffer */
+ while ( !( UCSR0A & (1<<5)) );
+ /* Put data into buffer, sends the data */
+ UDR0 = data;
+}
+void printHex(byte val)
+{
+  byte h = val>>4;
+  if(h<=9)
+    h = h + '0';
+  else
+    h = (h-0x0A) + 'A';
+    
+  byte l = val&0x0F;
+  if(l<=9)
+    l = l + '0';
+  else
+    l = (l-0x0A) + 'A';
+
+  USART_Transmit('0');
+  USART_Transmit('x');
+  USART_Transmit(h);
+  USART_Transmit(l);
+  USART_Transmit(' ');
+}
 
