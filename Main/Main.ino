@@ -100,12 +100,13 @@ void loop() {
 
     vcos_egStateMachine();
 
+    midi_repeatManager();
+    midi_glissManager();
+
 
     /*
     frontp_state_machine();
 
-    midi_repeatManager();
-    midi_glissManager();
 
     outs_stateMachine();
 

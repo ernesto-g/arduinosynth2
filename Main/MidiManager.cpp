@@ -155,6 +155,7 @@ void midi_init(void)
 
   repeatCounter = 0;
   repeatRunning=0;
+  currentRepeatValue=0;
   repeatOn=0;
   isGlissOn = 0;
   glissSpeed = 0;

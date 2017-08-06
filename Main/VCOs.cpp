@@ -225,7 +225,7 @@ void vcos_egStateMachine(void)
                 egDividers[i] = eg1Release;
             }   
             eg[i]--;
-            printHex(eg[i]);
+            //printHex(eg[i]);
             if(eg[i]==0)
               egState[i] = EG_STATE_IDLE;
           }
