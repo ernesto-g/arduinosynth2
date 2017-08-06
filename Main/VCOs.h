@@ -1,6 +1,11 @@
 
 
 #define VCOS_LEN  6
+#define EG1_MAX_VALUE  16
+#define EG2_MAX_VALUE 255
+#define EGS_LEN       VCOS_LEN+1
+#define EG2_INDEX     EGS_LEN-1 // last eg in array is EG2
+
 
 void vcos_init(void);
 void vcos_calculateOuts(void);

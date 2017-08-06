@@ -1,8 +1,7 @@
 #include <Arduino.h>
 #include "VCOs.h"
 #include "Lfo.h"
-
-#define EG_MAX_VALUE  16
+#include "Config.h"
 
 static volatile unsigned short n[VCOS_LEN];
 static volatile unsigned short freqMultiplier[VCOS_LEN];
@@ -16,19 +15,23 @@ volatile unsigned char lfoValueForVCA; // 128 max
 #define EG_STATE_AT_MAX           3
 #define EG_STATE_START_RELEASE    4
 #define EG_STATE_RUNNING_RELEASE  5
-static volatile unsigned short eg[VCOS_LEN];
-static volatile unsigned char egState[VCOS_LEN];
-static volatile unsigned short egDividers[VCOS_LEN];
-volatile unsigned int egCounter; // affected by lfo interrupt
+volatile unsigned short eg[EGS_LEN];
+static volatile unsigned char egState[EGS_LEN];
+static volatile unsigned short egDividers[EGS_LEN];
+unsigned int egCounter[EGS_LEN]; 
+volatile unsigned int egCounterInt; // affected by lfo interrupt
 //______________
 
 // Values set by front panel potenciometers
 static volatile unsigned short eg1Attack=40/8;
-static volatile unsigned short eg2Attack=512;
+static volatile unsigned short eg2Attack=40/8;
 static volatile unsigned short eg1Release=40/8;
-static volatile unsigned short eg2Release=512;
+static volatile unsigned short eg2Release=40/8;
 volatile unsigned char lfoValueForVCAInPanel; // 127 max
+volatile unsigned short lfoEg2BalanceValueForVCFInPanel; // 127 max
 //_________________________________________
+
+
 
 void vcos_init(void)
 {
@@ -38,11 +41,17 @@ void vcos_init(void)
     n[i]=0;
     freqMultiplier[i] = 0;
     freqMultiplierHalf[i] = 0;
-    eg[i] = EG_MAX_VALUE;
-    egState[i] = EG_STATE_IDLE;
   }
+  for(i=0; i<EGS_LEN;i++)
+  {
+    eg[i] = EG1_MAX_VALUE;
+    egState[i] = EG_STATE_IDLE;
+  }  
+  eg[EG2_INDEX] = 0;
+
   lfoValueForVCA = 0;
   lfoValueForVCAInPanel=0;
+  lfoEg2BalanceValueForVCFInPanel = 0;
 }
 
 void vcos_calculateOuts(void)
@@ -56,14 +65,10 @@ void vcos_calculateOuts(void)
       n[i]++;
       if(n[i]<freqMultiplierHalf[i])
       {
-        //acc-= ( (32*eg[i])/256) ;
-        //acc-= eg[i]/8 ;
         acc-= eg[i] ;
       }
       else if(n[i]<freqMultiplier[i])
       {
-        //acc+= ((32*eg[i])/256) ;        
-        //acc+= eg[i]/8 ;        
         acc+= eg[i] ;        
       }
       else
@@ -71,7 +76,7 @@ void vcos_calculateOuts(void)
         n[i]=0;
       }           
     }
-    OCR1B = (((acc*lfoValueForVCA)/128)*lfoValueForVCAInPanel)/128 + (((acc))*(128-lfoValueForVCAInPanel))/128 + (3*EG_MAX_VALUE);
+    OCR1B = (((acc*lfoValueForVCA)/128)*lfoValueForVCAInPanel)/128 + (((acc))*(128-lfoValueForVCAInPanel))/128 + (3*EG1_MAX_VALUE);
 
     acc = 0;
     for(i=3; i<6;i++)
@@ -79,12 +84,10 @@ void vcos_calculateOuts(void)
       n[i]++;
       if(n[i]<freqMultiplierHalf[i])
       {
-        //acc-= ((32*eg[i])/256) ;
         acc-= eg[i] ;
       }
       else if(n[i]<freqMultiplier[i])
       {
-        //acc+= ((32*eg[i])/256) ;        
         acc+= eg[i];        
       }
       else
@@ -92,9 +95,9 @@ void vcos_calculateOuts(void)
         n[i]=0;
       }           
     }
-    OCR1A = (((acc*lfoValueForVCA)/128)*lfoValueForVCAInPanel)/128 + (((acc))*(128-lfoValueForVCAInPanel))/128 + (3*EG_MAX_VALUE);
+    OCR1A = (((acc*lfoValueForVCA)/128)*lfoValueForVCAInPanel)/128 + (((acc))*(128-lfoValueForVCAInPanel))/128 + (3*EG1_MAX_VALUE);
 
-    egCounter++;
+    egCounterInt++;
 
     digitalWrite(13,LOW);
 }
@@ -104,11 +107,15 @@ void vcos_setFrqVCO(unsigned char vcoIndex,unsigned short val)
     freqMultiplier[vcoIndex] = val;
     freqMultiplierHalf[vcoIndex] = val/2;
     egState[vcoIndex] = EG_STATE_START_ATTACK;
+    egState[EG2_INDEX] = EG_STATE_START_ATTACK;
 }
 
 void vcos_turnOff(unsigned char vcoIndex)
 {
     egState[vcoIndex] = EG_STATE_START_RELEASE;
+
+    if(egState[EG2_INDEX]!=EG_STATE_IDLE && egState[EG2_INDEX]!=EG_STATE_RUNNING_RELEASE)
+      egState[EG2_INDEX] = EG_STATE_START_RELEASE;
 }
 
 
@@ -117,7 +124,7 @@ static unsigned char indexStateMachine=0;
 static unsigned char allEgsIdle(void)
 {
   unsigned char i;
-  for(i=0; i<VCOS_LEN; i++)
+  for(i=0; i<(EGS_LEN-1); i++)
   {
     if(egState[i]!=EG_STATE_IDLE)
       return 0;
@@ -128,8 +135,18 @@ void vcos_egStateMachine(void)
 {
   unsigned char i = indexStateMachine;
   
-  //for(i=0; i<VCOS_LEN; i++)
+  unsigned char timeout=24;  
+  if(i==EG2_INDEX)
+    timeout = 1;
+
+  if(egCounterInt>=2)
   {
+      egCounterInt=0;
+      unsigned char j;
+      for(j=0; j<EGS_LEN; j++)
+        egCounter[j]++;
+  }  
+    
     switch(egState[i])
     {
       case EG_STATE_IDLE:
@@ -138,25 +155,38 @@ void vcos_egStateMachine(void)
       }
       case EG_STATE_START_ATTACK:
       {
-        egDividers[i] = eg1Attack;
+        if(i==EG2_INDEX)
+          egDividers[i] = eg2Attack;
+        else
+          egDividers[i] = eg1Attack;
+        
         egState[i] = EG_STATE_RUNNING_ATTACK;
         eg[i] = 0;
-        egCounter=0;
+        egCounter[i]=0;
         break;
       }
       case EG_STATE_RUNNING_ATTACK:
       {
-        if(egCounter>24) // 1ms
+        if(egCounter[i]>timeout) // 1ms
         {
-          egCounter=0;
+          egCounter[i]=0;
           if(egDividers[i]>0)
             egDividers[i]--;
           if(egDividers[i]==0)
           {
-            egDividers[i] = eg1Attack;
-            eg[i]++;
-            if(eg[i]==EG_MAX_VALUE)
-              egState[i] = EG_STATE_AT_MAX;
+            eg[i]+=1;
+            if(i==EG2_INDEX)
+            {
+              egDividers[i] = eg2Attack;
+              if(eg[i]>=EG2_MAX_VALUE)
+                egState[i] = EG_STATE_AT_MAX;              
+            }
+            else
+            {
+              egDividers[i] = eg1Attack;
+              if(eg[i]>=EG1_MAX_VALUE)
+                egState[i] = EG_STATE_AT_MAX;              
+            } 
           }
         }
         break;
@@ -167,22 +197,34 @@ void vcos_egStateMachine(void)
       }
       case EG_STATE_START_RELEASE:
       {
-        egDividers[i] = eg1Release;
+        if(i==EG2_INDEX)
+            egDividers[i] = eg2Release;
+        else
+            egDividers[i] = eg1Release;
+
         egState[i] = EG_STATE_RUNNING_RELEASE;
-        egCounter=0;        
+        egCounter[i]=0;        
         break;
       }
       case EG_STATE_RUNNING_RELEASE:
       {
-        if(egCounter>24) // 1ms
+        if(egCounter[i]>timeout) // 1ms
         {
-          egCounter=0;
+          egCounter[i]=0;
           if(egDividers[i]>0)
             egDividers[i]--;
           if(egDividers[i]==0)
           {
-            egDividers[i] = eg1Release;
+            if(i==EG2_INDEX)
+            {
+                egDividers[i] = eg2Release;    
+            }
+            else
+            {
+                egDividers[i] = eg1Release;
+            }   
             eg[i]--;
+            printHex(eg[i]);
             if(eg[i]==0)
               egState[i] = EG_STATE_IDLE;
           }
@@ -190,10 +232,9 @@ void vcos_egStateMachine(void)
         break;
       }
     }
-  }
 
   indexStateMachine++;
-  if(indexStateMachine>=VCOS_LEN)
+  if(indexStateMachine>=EGS_LEN)
   {
     indexStateMachine=0;
     if(allEgsIdle())
@@ -205,18 +246,26 @@ void vcos_egStateMachine(void)
 
 void vcos_setEg1Attack(byte value)
 {
+  if(value==0)
+    value=1;
   eg1Attack = value;
 }
 void vcos_setEg2Attack(byte value)
 {
+  if(value==0)
+    value=1;
   eg2Attack = value;
 }
 void vcos_setEg1Release(byte value)
 {
+  if(value==0)
+    value=1;
   eg1Release = value;
 }
 void vcos_setEg2Release(byte value)
 {
+  if(value==0)
+    value=1;
   eg2Release = value;
 }
 

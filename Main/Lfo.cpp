@@ -335,7 +335,6 @@ extern volatile unsigned int btnPressedCounter;
 extern volatile unsigned int sequenceNoteDurationCounter;
 static volatile unsigned int repeatCounterMultiplier;
 extern volatile unsigned int glissCounter;
-extern volatile unsigned int egCounter;
 
 static volatile unsigned char lfoIntDivider=0;
 static volatile unsigned char lfoOn=0;
@@ -345,10 +344,14 @@ static volatile unsigned char lfoWaitZero=1;
 extern volatile unsigned char lfoValueForVCAInPanel; // 127 max
 extern volatile unsigned char lfoValueForVCA; // 128 max
 //_____
+// VCF modulation
+extern volatile unsigned short lfoEg2BalanceValueForVCFInPanel; // 127 max
+extern volatile unsigned short eg[EGS_LEN];
+//________________
 
 ISR(TIMER0_COMPA_vect) // 8.6uS
 {
-  unsigned char PWMValue;
+  unsigned short PWMValue;
   
   vcos_calculateOuts();
   //return ;
@@ -385,20 +388,28 @@ ISR(TIMER0_COMPA_vect) // 8.6uS
       }  
 
       // VCA modulation
-      lfoValueForVCA = PWMValue/2; // (((unsigned short)(OCR2B/2))*lfoValueForVCAInPanel)/128;
+      lfoValueForVCA = PWMValue/2;
       //________________
 
+      // VCF modulation (analog)
       if(lfoOn)
-        OCR2B = PWMValue;
+      {
+        //OCR2B = PWMValue;
+        PWMValue = ((PWMValue)*lfoEg2BalanceValueForVCFInPanel)/128;
+      }
       else
       {
           if(lfoWaitZero)
           {
-              OCR2B = PWMValue;
-              if(OCR2B==0)
+              PWMValue = ((PWMValue)*lfoEg2BalanceValueForVCFInPanel)/128;
+              if(PWMValue==0)
                 lfoWaitZero=0;
           }
+          else 
+            PWMValue = 0;
       }
+      OCR2B = PWMValue + (((eg[EG2_INDEX]))*((128-lfoEg2BalanceValueForVCFInPanel)))/128;
+      //_________________
       
       repeatCounterMultiplier++;
       if(repeatCounterMultiplier>=40) // 25ms

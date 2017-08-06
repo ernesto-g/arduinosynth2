@@ -259,8 +259,8 @@ void midi_analizeMidiInfo(MidiInfo * pMidiInfo)
         {
             byte controlNumber = pMidiInfo->note;
             byte controlValue = pMidiInfo->vel;
-            printHex(controlNumber);
-            printHex(controlValue);     
+            //printHex(controlNumber);
+            //printHex(controlValue);     
             setMidiControl(controlNumber, controlValue);
         }
         else
@@ -725,12 +725,12 @@ static void setMidiControl(byte control, byte value)
       }
       case MIDI_CONTROL_EG2_ATTACK:
       {
-        //vcos_setEg2Attack(value);
+        vcos_setEg2Attack(value);
         break;
       }
       case MIDI_CONTROL_EG2_RELEASE:
       {
-        //vcos_setEg2Release(value);        
+        vcos_setEg2Release(value);        
         break;
       }
       case MIDI_CONTROL_LFO_SPEED:
