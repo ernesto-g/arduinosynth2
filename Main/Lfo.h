@@ -27,5 +27,6 @@ void lfo_setFrequencyMultiplier(unsigned int fm);
 void lfo_reset(void);
 void lfo_outOn(void);
 void lfo_outOff(void);
+void lfo_cooperativeTimer0Interrupt(void);
 
 

@@ -58,7 +58,8 @@ void vcos_calculateOuts(void)
 {
     signed short acc;
     unsigned char i;
-    digitalWrite(13,HIGH);
+    //digitalWrite(13,HIGH);
+
     acc = 0;
     for(i=0; i<3;i++)
     {
@@ -99,7 +100,7 @@ void vcos_calculateOuts(void)
 
     egCounterInt++;
 
-    digitalWrite(13,LOW);
+    //digitalWrite(13,LOW);
 }
 
 void vcos_setFrqVCO(unsigned char vcoIndex,unsigned short val)

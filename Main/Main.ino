@@ -24,22 +24,24 @@
 #include "SequencerManager.h"
 #include "VCOs.h"
 
-volatile unsigned char bufferRx[8];
-volatile unsigned char bufferRxIndex=0;
-volatile unsigned char bufferRxNewPacket=0;
-
-
-
-
+volatile unsigned char bufferRx[5][3];
+volatile unsigned char bufferRxIndex[5]={0,0,0,0,0};
+volatile unsigned char bufferRxNewPacket[5]={0,0,0,0,0};
+volatile unsigned char currentBufferIndex=0;
 
 ISR(USART_RX_vect)
 {
-    if(bufferRxNewPacket==0)
+    if(bufferRxNewPacket[currentBufferIndex]==0)
     {
-      bufferRx[bufferRxIndex] = UDR0;
-      bufferRxIndex++;
-      if(bufferRxIndex>=3)
-        bufferRxNewPacket = 1;
+      bufferRx[currentBufferIndex][bufferRxIndex[currentBufferIndex]] = UDR0;
+      bufferRxIndex[currentBufferIndex]++;
+      if(bufferRxIndex[currentBufferIndex]>=3)
+      {
+        bufferRxNewPacket[currentBufferIndex] = 1;
+        currentBufferIndex++;
+        if(currentBufferIndex>=5)
+          currentBufferIndex=0;
+      }
     }
     else
     {
@@ -49,7 +51,7 @@ ISR(USART_RX_vect)
 }
 
 void setup() {
-  config_init();
+  config_init();    
   outs_init();
   midi_init();
   vcos_init();
@@ -78,19 +80,21 @@ void loop() {
   while(1)
   {
     // MIDI Reception
-    if(bufferRxNewPacket)
+    unsigned char index;
+    for(index=0; index<5; index++)
     {
-       //printHex(bufferRx[0]);
-       //printHex(bufferRx[1]);
-       //printHex(bufferRx[2]);
-       
-        midi_stateMachine(bufferRx[0]);
-        midi_stateMachine(bufferRx[1]);
-        midi_stateMachine(bufferRx[2]);      
-        bufferRxIndex=0;
-        bufferRxNewPacket=0;
+      if(bufferRxNewPacket[index])
+      {       
+          midi_stateMachine(bufferRx[index][0]);
+          midi_stateMachine(bufferRx[index][1]);
+          midi_stateMachine(bufferRx[index][2]);      
+          bufferRxIndex[index]=0;
+          bufferRxNewPacket[index]=0;
+      }
     }
     //_______________    
+
+    lfo_cooperativeTimer0Interrupt();
 
     ain_state_machine();
 

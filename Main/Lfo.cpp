@@ -349,16 +349,19 @@ extern volatile unsigned short lfoEg2BalanceValueForVCFInPanel; // 127 max
 extern volatile unsigned short eg[EGS_LEN];
 //________________
 
-ISR(TIMER0_COMPA_vect) // 8.6uS
+
+ISR(TIMER0_COMPA_vect) // 52uS
+{
+  digitalWrite(13,HIGH);  
+  vcos_calculateOuts();
+  lfoIntDivider++; 
+  digitalWrite(13,LOW);  
+
+}
+
+void lfo_cooperativeTimer0Interrupt(void)
 {
   unsigned short PWMValue;
-  
-  vcos_calculateOuts();
-  //return ;
-
-  //digitalWrite(13,HIGH);
-
-  lfoIntDivider++;
   if(lfoIntDivider>=12)
   {
     lfoIntDivider=0;
@@ -394,23 +397,24 @@ ISR(TIMER0_COMPA_vect) // 8.6uS
       // VCF modulation (analog)
       if(lfoOn)
       {
-        //OCR2B = PWMValue;
-        PWMValue = ((PWMValue)*lfoEg2BalanceValueForVCFInPanel)/128;
+        OCR2B = PWMValue;
+        //PWMValue = ((PWMValue)*lfoEg2BalanceValueForVCFInPanel)/128;
       }
       else
       {
           if(lfoWaitZero)
           {
-              PWMValue = ((PWMValue)*lfoEg2BalanceValueForVCFInPanel)/128;
+              //PWMValue = ((PWMValue)*lfoEg2BalanceValueForVCFInPanel)/128;
+              OCR2B = PWMValue;
               if(PWMValue==0)
                 lfoWaitZero=0;
           }
           else 
             PWMValue = 0;
       }
-      OCR2B = PWMValue + (((eg[EG2_INDEX]))*((128-lfoEg2BalanceValueForVCFInPanel)))/128;
+      //OCR2B = PWMValue + (((eg[EG2_INDEX]))*((128-lfoEg2BalanceValueForVCFInPanel)))/128;
       //_________________
-      
+
       repeatCounterMultiplier++;
       if(repeatCounterMultiplier>=40) // 25ms
       {
@@ -422,12 +426,7 @@ ISR(TIMER0_COMPA_vect) // 8.6uS
       glissCounter++;
   }
 
-  
-  //digitalWrite(13,LOW);  
-
 }
-
-
 
 void lfo_init(void)
 {
