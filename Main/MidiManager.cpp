@@ -110,7 +110,6 @@ static void setMidiControl(byte control, byte value);
 static unsigned int currentRepeatValue;
 static unsigned char repeatRunning;
 static unsigned char repeatOn;
-static unsigned char lfoIsSynced;
 static unsigned char repeatKeyIndex;
 
 static unsigned char isGlissOn;
@@ -157,7 +156,6 @@ void midi_init(void)
   repeatCounter = 0;
   repeatRunning=0;
   repeatOn=0;
-  lfoIsSynced = 0;
   isGlissOn = 0;
   glissSpeed = 0;
   glissFinalKey = 0xFF;
@@ -209,8 +207,11 @@ void midi_analizeMidiInfo(MidiInfo * pMidiInfo)
               digitalWrite(PIN_TRIGGER_SIGNAL,HIGH); // trigger=1
               digitalWrite(PIN_GATE_SIGNAL,LOW); // gate=1
 
-              if(lfoIsSynced)
-                lfo_reset();
+              //if(lfoIsSynced)
+              //  lfo_reset();
+              lfo_outOn();
+              lfo_reset();
+
               if(seq_isRecording())
                 seq_startRecordNote(pMidiInfo->note);
 
@@ -360,8 +361,9 @@ void midi_glissManager(void)
               glissCounter=0;
               digitalWrite(PIN_TRIGGER_SIGNAL,HIGH); // trigger=1
               digitalWrite(PIN_GATE_SIGNAL,LOW); // gate=1
-              if(lfoIsSynced)
-                    lfo_reset();
+              //if(lfoIsSynced)
+              lfo_reset();
+              lfo_outOn();
               setVCOs(glissStartKey);
               outs_set(OUT_REPEAT,1);
               glissState = GLISS_STATE_WAIT_NOTE_DURATION;
@@ -402,8 +404,9 @@ void midi_repeatManager(void)
         {
           digitalWrite(PIN_TRIGGER_SIGNAL,HIGH); // trigger=1
           digitalWrite(PIN_GATE_SIGNAL,LOW); // gate=1
-          if(lfoIsSynced)
-                lfo_reset();
+          //if(lfoIsSynced)
+          lfo_reset();
+          lfo_outOn();
           setVCOs(note2Play);
         }
         outs_set(OUT_REPEAT,1);
@@ -464,13 +467,7 @@ void midi_setRepeatValue(unsigned int repeatVal)
   }
 }
 
-void midi_setLfoSync(unsigned int val)
-{
-    if(val<512)
-      lfoIsSynced=0;
-    else
-      lfoIsSynced=1;
-}
+
 
 void midi_setGlissOn(unsigned char val)
 {

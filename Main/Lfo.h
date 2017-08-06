@@ -25,5 +25,7 @@ void lfo_init(void);
 void lfo_setWaveType(unsigned char type);
 void lfo_setFrequencyMultiplier(unsigned int fm);
 void lfo_reset(void);
+void lfo_outOn(void);
+void lfo_outOff(void);
 
 

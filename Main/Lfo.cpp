@@ -338,6 +338,8 @@ extern volatile unsigned int glissCounter;
 extern volatile unsigned int egCounter;
 
 static volatile unsigned char lfoIntDivider=0;
+static volatile unsigned char lfoOn=0;
+static volatile unsigned char lfoWaitZero=1;
 
 // VCA modulation
 extern volatile unsigned char lfoValueForVCAInPanel; // 127 max
@@ -346,7 +348,8 @@ extern volatile unsigned char lfoValueForVCA; // 128 max
 
 ISR(TIMER0_COMPA_vect) // 8.6uS
 {
-
+  unsigned char PWMValue;
+  
   vcos_calculateOuts();
   //return ;
 
@@ -365,27 +368,37 @@ ISR(TIMER0_COMPA_vect) // 8.6uS
       switch(waveType)
       {
         case LFO_WAVE_TYPE_SINE:
-          OCR2B = pgm_read_byte_near(SINETABLE + lfoCounter );
+          PWMValue = pgm_read_byte_near(SINETABLE + lfoCounter );
           break;
         case LFO_WAVE_TYPE_TRIANGLE:
-          OCR2B = pgm_read_byte_near(TRIANGLETABLE + lfoCounter );
+          PWMValue = pgm_read_byte_near(TRIANGLETABLE + lfoCounter );
           break;
         case LFO_WAVE_TYPE_EXP:
-          OCR2B = pgm_read_byte_near(EXPTABLE + lfoCounter );
+          PWMValue = pgm_read_byte_near(EXPTABLE + lfoCounter );
           break;
         case LFO_WAVE_TYPE_SQUARE:
           if(lfoCounter<(TABLE_SIZE/2))
-            OCR2B = 255;
+            PWMValue = 255;
           else
-            OCR2B = 0;
+            PWMValue = 0;
           break;
       }  
 
       // VCA modulation
-      //lfoCurrentValue = OCR2B;
-      lfoValueForVCA = OCR2B/2; // (((unsigned short)(OCR2B/2))*lfoValueForVCAInPanel)/128;
+      lfoValueForVCA = PWMValue/2; // (((unsigned short)(OCR2B/2))*lfoValueForVCAInPanel)/128;
       //________________
-      
+
+      if(lfoOn)
+        OCR2B = PWMValue;
+      else
+      {
+          if(lfoWaitZero)
+          {
+              OCR2B = PWMValue;
+              if(OCR2B==0)
+                lfoWaitZero=0;
+          }
+      }
       
       repeatCounterMultiplier++;
       if(repeatCounterMultiplier>=40) // 25ms
@@ -432,6 +445,17 @@ void lfo_reset(void)
     lfoCounter=0;
 }
 
-
-
+void lfo_outOn(void)
+{
+  lfoOn=1;
+  lfoWaitZero=0;
+}
+void lfo_outOff(void)
+{
+  if(lfoOn)
+  {
+    lfoWaitZero=1;  
+    lfoOn=0;
+  }
+}
 

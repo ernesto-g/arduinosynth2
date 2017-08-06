@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include "VCOs.h"
+#include "Lfo.h"
 
 #define EG_MAX_VALUE  16
 
@@ -7,7 +8,6 @@ static volatile unsigned short n[VCOS_LEN];
 static volatile unsigned short freqMultiplier[VCOS_LEN];
 static volatile unsigned short freqMultiplierHalf[VCOS_LEN];
 volatile unsigned char lfoValueForVCA; // 128 max
-volatile unsigned char lfoValueForVCAInPanel; // 127 max
 
 // EG management
 #define EG_STATE_IDLE             0
@@ -27,6 +27,7 @@ static volatile unsigned short eg1Attack=40/8;
 static volatile unsigned short eg2Attack=512;
 static volatile unsigned short eg1Release=40/8;
 static volatile unsigned short eg2Release=512;
+volatile unsigned char lfoValueForVCAInPanel; // 127 max
 //_________________________________________
 
 void vcos_init(void)
@@ -113,6 +114,16 @@ void vcos_turnOff(unsigned char vcoIndex)
 
 static unsigned char indexStateMachine=0;
 
+static unsigned char allEgsIdle(void)
+{
+  unsigned char i;
+  for(i=0; i<VCOS_LEN; i++)
+  {
+    if(egState[i]!=EG_STATE_IDLE)
+      return 0;
+  }
+  return 1;
+}
 void vcos_egStateMachine(void)
 {
   unsigned char i = indexStateMachine;
@@ -183,7 +194,13 @@ void vcos_egStateMachine(void)
 
   indexStateMachine++;
   if(indexStateMachine>=VCOS_LEN)
+  {
     indexStateMachine=0;
+    if(allEgsIdle())
+    {
+      lfo_outOff(); // no pressed keys, turn the lfo off (avoid low freq noise)
+    }
+  }
 }
 
 void vcos_setEg1Attack(byte value)
