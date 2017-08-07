@@ -210,8 +210,8 @@ void midi_analizeMidiInfo(MidiInfo * pMidiInfo)
 
               //if(lfoIsSynced)
               //  lfo_reset();
-              lfo_outOn();
               lfo_reset();
+              lfo_outOn();
 
               if(seq_isRecording())
                 seq_startRecordNote(pMidiInfo->note);
@@ -744,8 +744,9 @@ static void setMidiControl(byte control, byte value)
         vcos_setLfoForVCAModulation(value);
         break;
       }
-      case MIDI_CONTROL_VCA_EG1_MODULATION:
+      case MIDI_CONTROL_VCF_LFO_MODULATION:
       {
+        vcos_setLfoForVCFModulation(value);
         break;
       }
       case MIDI_CONTROL_REPEAT:

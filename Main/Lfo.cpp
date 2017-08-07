@@ -397,22 +397,22 @@ void lfo_cooperativeTimer0Interrupt(void)
       // VCF modulation (analog)
       if(lfoOn)
       {
-        OCR2B = PWMValue;
-        //PWMValue = ((PWMValue)*lfoEg2BalanceValueForVCFInPanel)/128;
+        //OCR2B = PWMValue;
+        PWMValue = ((PWMValue)*lfoEg2BalanceValueForVCFInPanel)/128;
       }
       else
       {
           if(lfoWaitZero)
           {
-              //PWMValue = ((PWMValue)*lfoEg2BalanceValueForVCFInPanel)/128;
-              OCR2B = PWMValue;
+              PWMValue = ((PWMValue)*lfoEg2BalanceValueForVCFInPanel)/128;
+              //OCR2B = PWMValue;
               if(PWMValue==0)
                 lfoWaitZero=0;
           }
           else 
             PWMValue = 0;
       }
-      //OCR2B = PWMValue + (((eg[EG2_INDEX]))*((128-lfoEg2BalanceValueForVCFInPanel)))/128;
+      OCR2B = PWMValue + (((eg[EG2_INDEX]))*((128-lfoEg2BalanceValueForVCFInPanel)))/128;
       //_________________
 
       repeatCounterMultiplier++;
@@ -452,7 +452,8 @@ void lfo_setFrequencyMultiplier(unsigned int fm)
 
 void lfo_reset(void)
 {
-    lfoCounter=0;
+    if(lfoOn==0)
+      lfoCounter=0;
 }
 
 void lfo_outOn(void)

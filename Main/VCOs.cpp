@@ -275,3 +275,7 @@ void vcos_setLfoForVCAModulation(byte value)
   lfoValueForVCAInPanel = value;  
 }
 
+void vcos_setLfoForVCFModulation(byte value)
+{
+  lfoEg2BalanceValueForVCFInPanel =value;
+}
