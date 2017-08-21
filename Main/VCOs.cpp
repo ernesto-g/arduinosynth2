@@ -23,10 +23,10 @@ volatile unsigned int egCounterInt; // affected by lfo interrupt
 //______________
 
 // Values set by front panel potenciometers
-static volatile unsigned short eg1Attack=40/8;
-static volatile unsigned short eg2Attack=40/8;
-static volatile unsigned short eg1Release=40/8;
-static volatile unsigned short eg2Release=40/8;
+static volatile unsigned short eg1Attack;
+static volatile unsigned short eg2Attack;
+static volatile unsigned short eg1Release;
+static volatile unsigned short eg2Release;
 volatile unsigned char lfoValueForVCAInPanel; // 127 max
 volatile unsigned short lfoEg2BalanceValueForVCFInPanel; // 127 max
 //_________________________________________
@@ -110,7 +110,7 @@ void vcos_setFrqVCO(unsigned char vcoIndex,unsigned short val)
     if(waveformType==0)
       freqMultiplierHalf[vcoIndex] = val/2;
     else
-      freqMultiplierHalf[vcoIndex] = val/4;
+      freqMultiplierHalf[vcoIndex] = val/5;
       
     egState[vcoIndex] = EG_STATE_START_ATTACK;
     egState[EG2_INDEX] = EG_STATE_START_ATTACK;

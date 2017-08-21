@@ -112,15 +112,7 @@ static unsigned char repeatRunning;
 static unsigned char repeatOn;
 static unsigned char repeatKeyIndex;
 
-//static unsigned char isGlissOn;
-//static unsigned int glissSpeed;
-//static unsigned char glissFinalKey;
-//static unsigned char glissStartKey;
-//static unsigned int glissState;
-
-
 volatile unsigned int repeatCounter; // incremented in lfo interrupt
-//volatile unsigned int glissCounter; // incremented in lfo interrupt
 
 static KeyPressedInfo keysPressed[KEYS_PRESSED_LEN];
 
@@ -146,24 +138,16 @@ void midi_init(void)
   repeatKeyIndex=0;
   voicesMode = MIDI_MODE_0;
   
-  unsigned short pwmVal = NOTES_TABLE_PWM[30];
-  OCR1A = pwmVal;    
-  OCR1B = pwmVal;  
 
   repeatCounter = 0;
   repeatRunning=0;
   currentRepeatValue=0;
   repeatOn=0;
-  //isGlissOn = 0;
-  //glissSpeed = 250;
-  //glissFinalKey = 0xFF;
-  //glissStartKey = 0xFF;
-  //glissState = GLISS_STATE_IDLE;
   showMode();
 
-  vcos_setEg1Attack(5);
-  vcos_setEg2Attack(5);
-  vcos_setEg1Release(5);
+  vcos_setEg1Attack(1); // max: 32. min: 0
+  vcos_setEg2Attack(1);
+  vcos_setEg1Release(5); // max : 64: min : 0
   vcos_setEg2Release(5);
   vcos_setLfoForVCAModulation(0);
   vcos_setLfoForVCFModulation(0);
@@ -592,22 +576,22 @@ static void setMidiControl(byte control, byte value)
   {
       case MIDI_CONTROL_EG1_ATTACK:
       {
-        vcos_setEg1Attack(value);
+        vcos_setEg1Attack(value/4);
         break;
       }
       case MIDI_CONTROL_EG1_RELEASE:
       {
-        vcos_setEg1Release(value);
+        vcos_setEg1Release(value/2);
         break;
       }
       case MIDI_CONTROL_EG2_ATTACK:
       {
-        vcos_setEg2Attack(value);
+        vcos_setEg2Attack(value/4);
         break;
       }
       case MIDI_CONTROL_EG2_RELEASE:
       {
-        vcos_setEg2Release(value);        
+        vcos_setEg2Release(value/2);        
         break;
       }
       case MIDI_CONTROL_LFO_SPEED:

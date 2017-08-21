@@ -51,12 +51,12 @@ ISR(USART_RX_vect)
 
 void setup() {
   config_init();    
-  midi_init();
   vcos_init();
   lfo_init();
   ain_init();
   frontp_init();
   seq_init();
+  midi_init();
 }
 
 

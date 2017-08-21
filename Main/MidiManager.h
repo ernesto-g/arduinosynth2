@@ -25,10 +25,6 @@
 #define MIDI_STATE_RVC_DATA1  1
 #define MIDI_STATE_RVC_DATA2  2
 
-#define GLISS_STATE_IDLE                0
-#define GLISS_STATE_CHANGE_NOTE         1
-#define GLISS_STATE_WAIT_NOTE_DURATION  2
-
 
 #define MIDI_MODE_0  0
 #define MIDI_MODE_1   1
