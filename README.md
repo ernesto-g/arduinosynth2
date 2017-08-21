@@ -2,6 +2,8 @@
 
 Six voices synth with MIDI input controlled by an arduino microcontroller. 
 
+![alt text](https://raw.githubusercontent.com/ernesto-g/arduinosynth2/master/Pictures/pic0.jpg)
+
 Synth features:
   - MIDI input
   - 76 key support (21 to 96)
