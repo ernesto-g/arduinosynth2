@@ -1,5 +1,5 @@
 /**
- *  Arduino Analog-Digital Synth
+ *  Arduino Digital Synth with analog filter
     Copyright (C) <2017>  Ernesto Gigliotti <ernestogigliotti@gmail.com>
 
     This program is free software: you can redistribute it and/or modify
@@ -26,7 +26,24 @@
 
 
 
-const unsigned short NOTES_TABLE_PWM[61] = {294
+const unsigned short NOTES_TABLE_PWM[76] = {
+699
+,660
+,623
+,588
+,555
+,524
+,494
+,467
+,441
+,416
+,392
+,370
+,350
+,330
+,312
+ 
+,294
 ,278
 ,262
 ,247
@@ -104,8 +121,6 @@ static byte getTheHighestKeyPressed(void);
 static unsigned char setVCOs(byte note);
 static byte getNextKeyForRepeat(void);
 static void setMidiControl(byte control, byte value);
-static void setVCOforGliss(byte note);
-static void stopVCOforGliss(void);
 
 static unsigned int currentRepeatValue;
 static unsigned char repeatRunning;
@@ -161,7 +176,7 @@ void midi_analizeMidiInfo(MidiInfo * pMidiInfo)
         if(pMidiInfo->cmd==MIDI_CMD_NOTE_ON)
         {
             // NOTE ON 
-            if(pMidiInfo->note>=36 && pMidiInfo->note<=96)
+            if(pMidiInfo->note>=21 && pMidiInfo->note<=96)
             { 
 
               saveKey(pMidiInfo->note);
@@ -557,19 +572,10 @@ static unsigned char setVCOs(byte note)
       byte vcoIndex = saveVCOKey(note);
       if(vcoIndex!=0xFF)
       {  
-        vcos_setFrqVCO(vcoIndex,NOTES_TABLE_PWM[note-36]); 
+        vcos_setFrqVCO(vcoIndex,NOTES_TABLE_PWM[note-21]); 
         return 1;
       }      
       return 0;
-}
-
-static void setVCOforGliss(byte note)
-{
-    vcos_setFrqVCO(5,NOTES_TABLE_PWM[note-36]); // VCO index=5 (last VCO)
-}
-static void stopVCOforGliss(void)
-{
-    vcos_turnOff(5); // VCO index=5 (last VCO)
 }
 
 

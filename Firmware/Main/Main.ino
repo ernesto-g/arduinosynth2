@@ -1,5 +1,5 @@
 /**
- *  Arduino Analog-Digital Synth
+ *  Arduino Digital Synth with analog filter
     Copyright (C) <2017>  Ernesto Gigliotti <ernestogigliotti@gmail.com>
 
     This program is free software: you can redistribute it and/or modify
@@ -62,18 +62,6 @@ void setup() {
 
 
 void loop() {
-
-  // prueba pin de led como salida
-  //pinMode(13,OUTPUT);
-  //OCR1B = 512;    
-  //OCR1A = 512;     
-  //USART_Transmit('h');         
-  //USART_Transmit('o');         
-  //USART_Transmit('l');         
-  //USART_Transmit('a');         
-  //printHex(0x5F);
-  //______________________________
-
 
   while(1)
   {

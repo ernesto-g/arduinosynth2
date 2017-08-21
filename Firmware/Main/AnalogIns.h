@@ -1,5 +1,5 @@
 /**
- *  Arduino Analog-Digital Synth
+ *  Arduino Digital Synth with analog filter
     Copyright (C) <2017>  Ernesto Gigliotti <ernestogigliotti@gmail.com>
 
     This program is free software: you can redistribute it and/or modify
@@ -15,21 +15,14 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-void config_init(void);
+#define ANALOG_STATE_IDLE   0
+#define ANALOG_STATE_START  1
+#define ANALOG_STATE_WAIT   2
+#define ANALOG_STATE_FINISH 3
+#define ANALOG_STATE_WAIT_CHN_MUX 4
 
-
-#define PIN_BUTTON                8
-#define PIN_VCO_WAVEFORM_SWITCH   12
-#define PIN_LFO_WAVEFORM_SWITCH   11
-
-#define PIN_LED_MODE0     6
-#define PIN_LED_MODE1     7
-#define PIN_LED_REPEAT    2
-
-
-void USART_Transmit( unsigned char data );
-void printHex(byte val);   
-
-
-
+void ain_init(void);
+void ain_state_machine(void);
+uint16_t* ain_getValues(void);
+uint8_t ain_isReady(void);
 

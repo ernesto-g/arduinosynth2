@@ -1,5 +1,5 @@
 /**
- *  Arduino Analog-Digital Synth
+ *  Arduino Digital Synth with analog filter
     Copyright (C) <2017>  Ernesto Gigliotti <ernestogigliotti@gmail.com>
 
     This program is free software: you can redistribute it and/or modify

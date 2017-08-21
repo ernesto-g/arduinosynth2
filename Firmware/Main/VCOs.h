@@ -1,5 +1,5 @@
 /**
- *  Arduino Analog-Digital Synth
+ *  Arduino Digital Synth with analog filter
     Copyright (C) <2017>  Ernesto Gigliotti <ernestogigliotti@gmail.com>
 
     This program is free software: you can redistribute it and/or modify
@@ -15,14 +15,28 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#define ANALOG_STATE_IDLE   0
-#define ANALOG_STATE_START  1
-#define ANALOG_STATE_WAIT   2
-#define ANALOG_STATE_FINISH 3
-#define ANALOG_STATE_WAIT_CHN_MUX 4
 
-void ain_init(void);
-void ain_state_machine(void);
-uint16_t* ain_getValues(void);
-uint8_t ain_isReady(void);
+
+#define VCOS_LEN  6
+#define EG1_MAX_VALUE  16
+#define EG2_MAX_VALUE 255
+#define EGS_LEN       VCOS_LEN+1
+#define EG2_INDEX     EGS_LEN-1 // last eg in array is EG2
+
+
+void vcos_init(void);
+void vcos_calculateOuts(void);
+
+void vcos_setFrqVCO(unsigned char vcoIndex,unsigned short val);
+void vcos_turnOff(unsigned char vcoIndex);
+void vcos_egStateMachine(void);
+
+void vcos_setEg1Attack(byte value);
+void vcos_setEg2Attack(byte value);
+void vcos_setEg1Release(byte value);
+void vcos_setEg2Release(byte value);
+void vcos_setLfoForVCAModulation(byte value);
+void vcos_setLfoForVCFModulation(byte value);
+void vcos_setWaveForm(unsigned char val);
+void vcos_setEGmode(byte mode);
 
