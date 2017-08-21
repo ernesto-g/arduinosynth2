@@ -22,6 +22,18 @@ Synth features:
         - MODE 0:EG with attack and release parameters.
         - MODE 1:EG with attack, sustain and release parameters.
 
+  - MIDI controls info:
+      - MIDI channel : 1  
+      - EG1 Attack   : control number 74
+      - EG1 Release  : control number 71
+      - EG2 Attack   : control number 73
+      - EG2 Release  : control number 72
+      - LFO Speed    : control number 75
+      - VCA modulation (EG1 or LFO balance) : control number 77
+      - VCF modulation (EG2 or LFO balance) : control number 76
+      - Arpeggiator speed : control number 78
+	  
+		
 This project contains:
   - Arduino nano Firmware
   - Schematics and PCB 
