@@ -64,14 +64,14 @@ void setup() {
 void loop() {
 
   // prueba pin de led como salida
-  pinMode(13,OUTPUT);
-  OCR1B = 512;    
-  OCR1A = 512;     
-  USART_Transmit('h');         
-  USART_Transmit('o');         
-  USART_Transmit('l');         
-  USART_Transmit('a');         
-  printHex(0x5F);
+  //pinMode(13,OUTPUT);
+  //OCR1B = 512;    
+  //OCR1A = 512;     
+  //USART_Transmit('h');         
+  //USART_Transmit('o');         
+  //USART_Transmit('l');         
+  //USART_Transmit('a');         
+  //printHex(0x5F);
   //______________________________
 
 
@@ -94,19 +94,15 @@ void loop() {
 
     lfo_cooperativeTimer0Interrupt();
 
-    ain_state_machine();
 
     vcos_egStateMachine();
 
     midi_repeatManager();
-    midi_glissManager();
 
     frontp_state_machine();
 
-    /*
-
-
-    outs_stateMachine();
+    /* //NOT USED
+    ain_state_machine();
 
     seq_stateMachine();
     */

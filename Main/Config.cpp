@@ -121,7 +121,7 @@ void config_init(void)
   digitalWrite(PIN_LED_REPEAT,LOW);
 
   pinMode(PIN_BUTTON,INPUT);
-  pinMode(PIN_GLISS_SWITCH,INPUT);
+  pinMode(PIN_VCO_WAVEFORM_SWITCH,INPUT);
   pinMode(PIN_LFO_WAVEFORM_SWITCH,INPUT);
 
   //__________

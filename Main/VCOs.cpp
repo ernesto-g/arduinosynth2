@@ -31,6 +31,7 @@ volatile unsigned char lfoValueForVCAInPanel; // 127 max
 volatile unsigned short lfoEg2BalanceValueForVCFInPanel; // 127 max
 //_________________________________________
 
+static unsigned char waveformType=0;
 
 
 void vcos_init(void)
@@ -106,7 +107,11 @@ void vcos_calculateOuts(void)
 void vcos_setFrqVCO(unsigned char vcoIndex,unsigned short val)
 {
     freqMultiplier[vcoIndex] = val;
-    freqMultiplierHalf[vcoIndex] = val/2;
+    if(waveformType==0)
+      freqMultiplierHalf[vcoIndex] = val/2;
+    else
+      freqMultiplierHalf[vcoIndex] = val/4;
+      
     egState[vcoIndex] = EG_STATE_START_ATTACK;
     egState[EG2_INDEX] = EG_STATE_START_ATTACK;
 }
@@ -119,6 +124,10 @@ void vcos_turnOff(unsigned char vcoIndex)
       egState[EG2_INDEX] = EG_STATE_START_RELEASE;
 }
 
+void vcos_setWaveForm(unsigned char val)
+{
+    waveformType = val;
+}
 
 static unsigned char indexStateMachine=0;
 

@@ -334,7 +334,6 @@ extern volatile unsigned int repeatCounter;
 extern volatile unsigned int btnPressedCounter;
 extern volatile unsigned int sequenceNoteDurationCounter;
 static volatile unsigned int repeatCounterMultiplier;
-extern volatile unsigned int glissCounter;
 
 static volatile unsigned char lfoIntDivider=0;
 static volatile unsigned char lfoOn=0;
@@ -423,7 +422,6 @@ void lfo_cooperativeTimer0Interrupt(void)
         btnPressedCounter++;
         sequenceNoteDurationCounter++;
       }
-      glissCounter++;
   }
 
 }

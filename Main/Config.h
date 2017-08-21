@@ -19,7 +19,7 @@ void config_init(void);
 
 
 #define PIN_BUTTON                8
-#define PIN_GLISS_SWITCH          12
+#define PIN_VCO_WAVEFORM_SWITCH   12
 #define PIN_LFO_WAVEFORM_SWITCH   11
 
 #define PIN_LED_MODE0     6

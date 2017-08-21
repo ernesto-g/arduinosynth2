@@ -23,6 +23,7 @@
 #include "Lfo.h"
 #include "MidiManager.h"
 #include "FrontPanel.h"
+#include "VCOs.h"
 
 volatile unsigned int btnPressedCounter; // incremented in lfo interrupt timer
 
@@ -46,23 +47,23 @@ void frontp_state_machine(void)
     {
         case FRONTPANEL_STATE_IDLE:
         {
-          state = FRONTPANEL_STATE_UPDATE_GLISS;
+          state = FRONTPANEL_STATE_UPDATE_VCO_WAVEFORM;
           break;
         }
-        case FRONTPANEL_STATE_UPDATE_GLISS:
+        case FRONTPANEL_STATE_UPDATE_VCO_WAVEFORM:
         {
-          // update gliss switch value
-          if(digitalRead(PIN_GLISS_SWITCH)==HIGH)
-            midi_setGlissOn(1);
+          // update vco waveform switch value
+          if(digitalRead(PIN_VCO_WAVEFORM_SWITCH)==HIGH)
+                vcos_setWaveForm(1);
           else
-            midi_setGlissOn(0);
+                vcos_setWaveForm(0);
           //__________________________  
           state = FRONTPANEL_STATE_UPDATE_LFO_WAVEFORM;
           break;
         }
         case FRONTPANEL_STATE_UPDATE_LFO_WAVEFORM:
         {
-          // update gliss switch value
+          // update lfo waveform switch value
           if(digitalRead(PIN_LFO_WAVEFORM_SWITCH)==HIGH)
             lfo_setWaveType(LFO_WAVE_TYPE_SINE);
           else

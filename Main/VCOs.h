@@ -20,4 +20,4 @@ void vcos_setEg1Release(byte value);
 void vcos_setEg2Release(byte value);
 void vcos_setLfoForVCAModulation(byte value);
 void vcos_setLfoForVCFModulation(byte value);
-
+void vcos_setWaveForm(unsigned char val);
