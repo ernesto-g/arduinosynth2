@@ -101,7 +101,7 @@ static byte deleteKey(byte note);
 static byte thereAreNoKeysPressed(void);
 static byte getTheLowestKeyPressed(void);
 static byte getTheHighestKeyPressed(void);
-static void setVCOs(byte note);
+static unsigned char setVCOs(byte note);
 static byte getNextKeyForRepeat(void);
 static void setMidiControl(byte control, byte value);
 static void setVCOforGliss(byte note);
@@ -181,8 +181,11 @@ void midi_analizeMidiInfo(MidiInfo * pMidiInfo)
         else if(pMidiInfo->cmd==MIDI_CMD_NOTE_OFF)
         {
             // NOTE OFF
-            byte vcoIndexToTurnOff = deleteVCOKey(pMidiInfo->note);
-            vcos_turnOff(vcoIndexToTurnOff);
+            if(repeatOn==0)
+            {
+              byte vcoIndexToTurnOff = deleteVCOKey(pMidiInfo->note);
+              vcos_turnOff(vcoIndexToTurnOff);
+            }
             
             if(deleteKey(pMidiInfo->note))
             {           
@@ -255,7 +258,7 @@ void midi_stopNote(unsigned char midiNoteNumber)
     midi_analizeMidiInfo(&mi);  
 }
 
-
+static byte note2PlayForRepeat;
 void midi_repeatManager(void)
 {
   if(currentRepeatValue>0)
@@ -264,17 +267,17 @@ void midi_repeatManager(void)
     if(repeatCounter>=currentRepeatValue)
     {
         repeatCounter=0;
-        byte note2Play = getNextKeyForRepeat();
-        if(note2Play!=0xFF)
+        note2PlayForRepeat = getNextKeyForRepeat();
+        if(note2PlayForRepeat!=0xFF)
         {
-          //digitalWrite(PIN_TRIGGER_SIGNAL,HIGH); // trigger=1
-          //digitalWrite(PIN_GATE_SIGNAL,LOW); // gate=1
-          //if(lfoIsSynced)
           lfo_reset();
           lfo_outOn();
-          setVCOs(note2Play);
+          if(setVCOs(note2PlayForRepeat)==0)
+          {
+            // repeat is too fast for declared EG parameters
+            note2PlayForRepeat = 0xFF;
+          }
         }
-        //outs_set(OUT_REPEAT,1);
         digitalWrite(PIN_LED_REPEAT,HIGH);      
         repeatRunning=1;
     }
@@ -282,10 +285,15 @@ void midi_repeatManager(void)
     {
       if(repeatRunning==1 && repeatCounter>=(4 + (currentRepeatValue/8) ) ) // wait (100ms + a proportional time) to disable trigger and gate
       {
-        //digitalWrite(PIN_TRIGGER_SIGNAL,LOW); // trigger=0
-        //outs_set(OUT_REPEAT,0);
         digitalWrite(PIN_LED_REPEAT,LOW);            
         repeatRunning=0;
+
+        if(note2PlayForRepeat!=0xFF)
+        {
+          byte vcoIndexToTurnOff = deleteVCOKey(note2PlayForRepeat);
+          vcos_turnOff(vcoIndexToTurnOff);
+        }
+            
         if(thereAreNoKeysPressed())
         {
             //digitalWrite(PIN_GATE_SIGNAL,HIGH); // gate=0
@@ -298,10 +306,10 @@ void midi_repeatManager(void)
     repeatOn=0;
     if(repeatRunning==1)
     {
-        //digitalWrite(PIN_TRIGGER_SIGNAL,LOW); // trigger=0
-        //outs_set(OUT_REPEAT,0);
         digitalWrite(PIN_LED_REPEAT,LOW);      
         repeatRunning=0;
+        byte vcoIndexToTurnOff = deleteVCOKey(note2PlayForRepeat);
+        vcos_turnOff(vcoIndexToTurnOff);
         if(thereAreNoKeysPressed())
         {
             //digitalWrite(PIN_GATE_SIGNAL,HIGH); // gate=0    
@@ -320,14 +328,16 @@ void midi_setRepeatValue(unsigned int repeatVal)
 //  }
 //  else
   {      
-      if(repeatVal<100)
+      if(repeatVal<64)
       {
           currentRepeatValue=0;  
       }
       else
-      {
-          repeatVal = 1023 - repeatVal; // invert value
-          currentRepeatValue= (repeatVal+30)/12 ; // currentRepeatValue between 2 and 158 (50ms to 1.9s)
+      {   
+          repeatVal-=64;
+                    
+          repeatVal = 1024 - repeatVal; // invert value
+          currentRepeatValue = (repeatVal+30)/12 ; // currentRepeatValue between 2 and 158 (50ms to 1.9s)
       }
   }
 }
@@ -550,13 +560,15 @@ static byte deleteVCOKey(byte note)
     return 0xFF;
 }
 
-static void setVCOs(byte note)
+static unsigned char setVCOs(byte note)
 {
       byte vcoIndex = saveVCOKey(note);
       if(vcoIndex!=0xFF)
       {  
         vcos_setFrqVCO(vcoIndex,NOTES_TABLE_PWM[note-36]); 
+        return 1;
       }      
+      return 0;
 }
 
 static void setVCOforGliss(byte note)
@@ -611,7 +623,7 @@ static void setMidiControl(byte control, byte value)
       }
       case MIDI_CONTROL_REPEAT:
       {
-        midi_setRepeatValue(value*8);
+        midi_setRepeatValue(((unsigned int)value)*8);
         break;
       }
   }
