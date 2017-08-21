@@ -29,19 +29,10 @@
 #define GLISS_STATE_CHANGE_NOTE         1
 #define GLISS_STATE_WAIT_NOTE_DURATION  2
 
-#define OUT_MODE0     0
-#define OUT_MODE1     1
-#define OUT_MODE2     2
-#define OUT_MODE3     3
-#define OUT_REPEAT    4
 
-#define MIDI_MODE_MONO_KEYS_BOTH_SIDES  0
-#define MIDI_MODE_MONO_KEYS_LOW_PRIOR   1
-#define MIDI_MODE_MONO_KEYS_HIGH_PRIOR  2
-#define MIDI_MODE_DUAL_KEYS_BOTH_SIDES  3
-#define MIDI_MODE_SECUENCER             4
-
-#define MIDI_MODES_LEN                  5
+#define MIDI_MODE_0  0
+#define MIDI_MODE_1   1
+#define MIDI_MODES_LEN                  2
 
 #define MIDI_CONTROL_EG1_ATTACK             0x4A
 #define MIDI_CONTROL_EG1_RELEASE            0x47

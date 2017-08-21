@@ -20,7 +20,6 @@
 #include "Config.h"
 #include "MidiManager.h"
 #include "AnalogIns.h"
-#include "Outs.h"
 #include "Lfo.h"
 #include "SequencerManager.h"
 #include "VCOs.h"
@@ -144,11 +143,8 @@ void midi_init(void)
     vcosKeys[i].flagFree=1;
 
   repeatKeyIndex=0;
-  voicesMode = MIDI_MODE_MONO_KEYS_BOTH_SIDES;
+  voicesMode = MIDI_MODE_0;
   
-  digitalWrite(PIN_VCO1_SCALE, HIGH);
-  digitalWrite(PIN_VCO2_SCALE, HIGH);
-  digitalWrite(PIN_GATE_SIGNAL,HIGH); // gate=0
   unsigned short pwmVal = NOTES_TABLE_PWM[30];
   OCR1A = pwmVal;    
   OCR1B = pwmVal;  
@@ -176,22 +172,6 @@ void midi_analizeMidiInfo(MidiInfo * pMidiInfo)
             if(pMidiInfo->note>=36 && pMidiInfo->note<=96)
             { 
 
-              if(voicesMode==MIDI_MODE_MONO_KEYS_LOW_PRIOR)
-              {
-                  if(pMidiInfo->note > getTheLowestKeyPressed())
-                  {
-                    saveKey(pMidiInfo->note);
-                    return; // ignore key                         
-                  }
-              }
-              else if(voicesMode==MIDI_MODE_MONO_KEYS_HIGH_PRIOR)
-              {
-                  if(pMidiInfo->note < getTheHighestKeyPressed())
-                  {
-                    saveKey(pMidiInfo->note);
-                    return; // ignore key                         
-                  }
-              }
               saveKey(pMidiInfo->note);
              
               if(repeatOn==1)
@@ -205,8 +185,8 @@ void midi_analizeMidiInfo(MidiInfo * pMidiInfo)
                   return; // gliss switch is on, dont play the note now
               }
 
-              digitalWrite(PIN_TRIGGER_SIGNAL,HIGH); // trigger=1
-              digitalWrite(PIN_GATE_SIGNAL,LOW); // gate=1
+              //digitalWrite(PIN_TRIGGER_SIGNAL,HIGH); // trigger=1
+              //digitalWrite(PIN_GATE_SIGNAL,LOW); // gate=1
 
               //if(lfoIsSynced)
               //  lfo_reset();
@@ -218,7 +198,7 @@ void midi_analizeMidiInfo(MidiInfo * pMidiInfo)
 
               setVCOs(pMidiInfo->note);
               
-              digitalWrite(PIN_TRIGGER_SIGNAL,LOW); // trigger=0
+              //digitalWrite(PIN_TRIGGER_SIGNAL,LOW); // trigger=0
             }
         }
         else if(pMidiInfo->cmd==MIDI_CMD_NOTE_OFF)
@@ -231,24 +211,11 @@ void midi_analizeMidiInfo(MidiInfo * pMidiInfo)
           {
             if(thereAreNoKeysPressed())
             {
-                digitalWrite(PIN_GATE_SIGNAL,HIGH); // gate=0
+                //digitalWrite(PIN_GATE_SIGNAL,HIGH); // gate=0
             }
             else
             {
-              if(voicesMode==MIDI_MODE_MONO_KEYS_LOW_PRIOR)
-              {
-                // a key was released. keep playing previous lower key
-                byte previousNote = getTheLowestKeyPressed();
-                if(previousNote!=0xFF)
-                  setVCOs(previousNote);
-              }
-              else if(voicesMode==MIDI_MODE_MONO_KEYS_HIGH_PRIOR)
-              {
-                // a key was released. keep playing previous highest key
-                byte previousNote = getTheHighestKeyPressed();
-                if(previousNote!=0xFF)
-                  setVCOs(previousNote);
-              }
+              
             }
             
             if(seq_isRecording())
@@ -360,13 +327,14 @@ void midi_glissManager(void)
               }
               // play note
               glissCounter=0;
-              digitalWrite(PIN_TRIGGER_SIGNAL,HIGH); // trigger=1
-              digitalWrite(PIN_GATE_SIGNAL,LOW); // gate=1
+              //digitalWrite(PIN_TRIGGER_SIGNAL,HIGH); // trigger=1
+              //digitalWrite(PIN_GATE_SIGNAL,LOW); // gate=1
               //if(lfoIsSynced)
               lfo_reset();
               lfo_outOn();
               setVCOs(glissStartKey);
-              outs_set(OUT_REPEAT,1);
+              //outs_set(OUT_REPEAT,1);
+              digitalWrite(PIN_LED_REPEAT,HIGH);                    
               glissState = GLISS_STATE_WAIT_NOTE_DURATION;
           }
           else
@@ -377,12 +345,14 @@ void midi_glissManager(void)
         {
             if(glissCounter>=glissSpeed)
             {
-              digitalWrite(PIN_TRIGGER_SIGNAL,LOW); // trigger=0
-              outs_set(OUT_REPEAT,0);      
+              //digitalWrite(PIN_TRIGGER_SIGNAL,LOW); // trigger=0
+              //outs_set(OUT_REPEAT,0);
+              digitalWrite(PIN_LED_REPEAT,LOW);            
               repeatRunning=0;
               if(thereAreNoKeysPressed())
-                  digitalWrite(PIN_GATE_SIGNAL,HIGH); // gate=0                        
-
+              {
+                  //digitalWrite(PIN_GATE_SIGNAL,HIGH); // gate=0                        
+              }
               glissState = GLISS_STATE_CHANGE_NOTE;
             }
           break;
@@ -403,25 +373,29 @@ void midi_repeatManager(void)
         byte note2Play = getNextKeyForRepeat();
         if(note2Play!=0xFF)
         {
-          digitalWrite(PIN_TRIGGER_SIGNAL,HIGH); // trigger=1
-          digitalWrite(PIN_GATE_SIGNAL,LOW); // gate=1
+          //digitalWrite(PIN_TRIGGER_SIGNAL,HIGH); // trigger=1
+          //digitalWrite(PIN_GATE_SIGNAL,LOW); // gate=1
           //if(lfoIsSynced)
           lfo_reset();
           lfo_outOn();
           setVCOs(note2Play);
         }
-        outs_set(OUT_REPEAT,1);
+        //outs_set(OUT_REPEAT,1);
+        digitalWrite(PIN_LED_REPEAT,HIGH);      
         repeatRunning=1;
     }
     else
     {
       if(repeatRunning==1 && repeatCounter>=(4 + (currentRepeatValue/8) ) ) // wait (100ms + a proportional time) to disable trigger and gate
       {
-        digitalWrite(PIN_TRIGGER_SIGNAL,LOW); // trigger=0
-        outs_set(OUT_REPEAT,0);      
+        //digitalWrite(PIN_TRIGGER_SIGNAL,LOW); // trigger=0
+        //outs_set(OUT_REPEAT,0);
+        digitalWrite(PIN_LED_REPEAT,LOW);            
         repeatRunning=0;
         if(thereAreNoKeysPressed())
-            digitalWrite(PIN_GATE_SIGNAL,HIGH); // gate=0
+        {
+            //digitalWrite(PIN_GATE_SIGNAL,HIGH); // gate=0
+        }
       }
     }
   }
@@ -430,11 +404,14 @@ void midi_repeatManager(void)
     repeatOn=0;
     if(repeatRunning==1)
     {
-        digitalWrite(PIN_TRIGGER_SIGNAL,LOW); // trigger=0
-        outs_set(OUT_REPEAT,0);      
+        //digitalWrite(PIN_TRIGGER_SIGNAL,LOW); // trigger=0
+        //outs_set(OUT_REPEAT,0);
+        digitalWrite(PIN_LED_REPEAT,LOW);      
         repeatRunning=0;
         if(thereAreNoKeysPressed())
-            digitalWrite(PIN_GATE_SIGNAL,HIGH); // gate=0    
+        {
+            //digitalWrite(PIN_GATE_SIGNAL,HIGH); // gate=0    
+        }
     }
   }
 }
@@ -442,12 +419,12 @@ void midi_repeatManager(void)
 
 void midi_setRepeatValue(unsigned int repeatVal)
 {
-  if(voicesMode==MIDI_MODE_SECUENCER)
-  {
-    seq_setSpeed((1023-repeatVal)/12);
-    currentRepeatValue=0;
-  }
-  else
+//  if(voicesMode==MIDI_MODE_SECUENCER)
+//  {
+//    seq_setSpeed((1023-repeatVal)/12);
+//    currentRepeatValue=0;
+//  }
+//  else
   {
       if(isGlissOn)
       {
@@ -477,6 +454,7 @@ void midi_setGlissOn(unsigned char val)
 
 void midi_buttonPressedLongCallback(void)
 {
+  /*
     if(voicesMode==MIDI_MODE_SECUENCER)
     {
         if(seq_isRecording()==0)
@@ -490,6 +468,7 @@ void midi_buttonPressedLongCallback(void)
           seq_startPlay();
         }
     }
+    */
 }
 
 void midi_buttonPressedShortCallback(void)
@@ -500,14 +479,14 @@ void midi_buttonPressedShortCallback(void)
 
     showMode();
 
-    if(voicesMode==MIDI_MODE_SECUENCER)
-      seq_startPlay();
-    else
+//    if(voicesMode==MIDI_MODE_SECUENCER)
+//      seq_startPlay();
+//    else
     {
         byte i;
         for(i=0; i<KEYS_PRESSED_LEN; i++)
           keysPressed[i].flagFree=1;
-        digitalWrite(PIN_GATE_SIGNAL,HIGH); // gate=0  
+        //digitalWrite(PIN_GATE_SIGNAL,HIGH); // gate=0  
       seq_stopPlay();
     }
 }
@@ -515,27 +494,16 @@ void midi_buttonPressedShortCallback(void)
 
 static void showMode(void)
 {
-    outs_set(OUT_MODE0,0);
-    outs_set(OUT_MODE1,0);
-    outs_set(OUT_MODE2,0);
-    outs_set(OUT_MODE3,0);
-
+    digitalWrite(PIN_LED_MODE0,LOW);
+    digitalWrite(PIN_LED_MODE1,LOW);
+  
     switch(voicesMode)
     {
-      case MIDI_MODE_MONO_KEYS_BOTH_SIDES:
-        outs_set(OUT_MODE0,1);
+      case MIDI_MODE_0:
+        digitalWrite(PIN_LED_MODE0,HIGH);
         break;
-      case MIDI_MODE_MONO_KEYS_LOW_PRIOR:
-        outs_set(OUT_MODE1,1);
-        break;
-      case MIDI_MODE_MONO_KEYS_HIGH_PRIOR:
-        outs_set(OUT_MODE2,1);
-        break;
-      case MIDI_MODE_DUAL_KEYS_BOTH_SIDES:
-        outs_set(OUT_MODE3,1);
-        break;
-      case MIDI_MODE_SECUENCER:
-        // all leds off
+      case MIDI_MODE_1:
+        digitalWrite(PIN_LED_MODE1,HIGH);
         break;
     }  
 }

@@ -18,7 +18,6 @@
 #include <Arduino.h>
 #include "SequencerManager.h"
 #include "MidiManager.h"
-#include "Outs.h"
 
 
 struct S_NoteInfo
@@ -77,7 +76,7 @@ void seq_stopPlay(void)
     if(state!=SEQ_STATE_IDLE)
     {
       midi_stopNote(0xFF);
-      outs_set(OUT_REPEAT,0);      
+      //outs_set(OUT_REPEAT,0);      
       state = SEQ_STATE_IDLE;
     }  
 }
@@ -111,14 +110,14 @@ void seq_stateMachine(void)
       }
       case SEQ_STATE_PLAY:
       {
-        outs_set(OUT_MODE3,0);          
+        //outs_set(OUT_MODE3,0);          
         playIndex=0;
         state = SEQ_STATE_PLAYING;
         break;
       }
       case SEQ_STATE_PLAYING:
       {
-        outs_set(OUT_REPEAT,1);      
+        //outs_set(OUT_REPEAT,1);      
         midi_startNote(sequence[playIndex].midiNoteNumber);
         sequenceNoteDurationCounter=0;
         state = SEQ_STATE_WAIT_NOTE_DURATION;
@@ -129,7 +128,7 @@ void seq_stateMachine(void)
         if(sequenceNoteDurationCounter>=sequence[playIndex].duration)
         {
             midi_stopNote(sequence[playIndex].midiNoteNumber);
-            outs_set(OUT_REPEAT,0);      
+            //outs_set(OUT_REPEAT,0);      
             sequenceNoteDurationCounter=0;
             state = SEQ_STATE_WAIT_SILENCE_DURATION;
         }
@@ -154,12 +153,12 @@ void seq_stateMachine(void)
           if(ledRec)
           {
             ledRec=0;
-            outs_set(OUT_MODE3,0);          
+            //outs_set(OUT_MODE3,0);          
           }
           else
           {
             ledRec=1;
-            outs_set(OUT_MODE3,1);          
+            //outs_set(OUT_MODE3,1);          
           }
         }
         break;

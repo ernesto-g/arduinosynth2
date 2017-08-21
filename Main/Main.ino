@@ -20,7 +20,6 @@
 #include "Lfo.h"
 #include "AnalogIns.h"
 #include "FrontPanel.h"
-#include "Outs.h"
 #include "SequencerManager.h"
 #include "VCOs.h"
 
@@ -52,7 +51,6 @@ ISR(USART_RX_vect)
 
 void setup() {
   config_init();    
-  outs_init();
   midi_init();
   vcos_init();
   lfo_init();
@@ -103,9 +101,9 @@ void loop() {
     midi_repeatManager();
     midi_glissManager();
 
+    frontp_state_machine();
 
     /*
-    frontp_state_machine();
 
 
     outs_stateMachine();

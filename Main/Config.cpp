@@ -111,19 +111,18 @@ void config_init(void)
   
 
   // Init Pins
-  pinMode(PIN_VCO1_SCALE,OUTPUT);
-  pinMode(PIN_VCO2_SCALE,OUTPUT);
-  pinMode(PIN_GATE_SIGNAL,OUTPUT);
-  pinMode(PIN_TRIGGER_SIGNAL,OUTPUT);
-  digitalWrite(PIN_GATE_SIGNAL,HIGH);
-  digitalWrite(PIN_TRIGGER_SIGNAL,LOW);
+  pinMode(PIN_LED_MODE0,OUTPUT);
+  digitalWrite(PIN_LED_MODE0,LOW);
 
-  pinMode(PIN_OUTS_DATA,OUTPUT);
-  pinMode(PIN_OUTS_CLK,OUTPUT);
-  pinMode(PIN_OUTS_STROBE,OUTPUT);
+  pinMode(PIN_LED_MODE1,OUTPUT);
+  digitalWrite(PIN_LED_MODE1,LOW);
+
+  pinMode(PIN_LED_REPEAT,OUTPUT);
+  digitalWrite(PIN_LED_REPEAT,LOW);
 
   pinMode(PIN_BUTTON,INPUT);
   pinMode(PIN_GLISS_SWITCH,INPUT);
+  pinMode(PIN_LFO_WAVEFORM_SWITCH,INPUT);
 
   //__________
    
