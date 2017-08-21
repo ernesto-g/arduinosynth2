@@ -15,6 +15,8 @@ volatile unsigned char lfoValueForVCA; // 128 max
 #define EG_STATE_AT_MAX           3
 #define EG_STATE_START_RELEASE    4
 #define EG_STATE_RUNNING_RELEASE  5
+#define EG_STATE_RUNNING_SUSTAIN  6
+#define EG_STATE_AT_SUSTAIN       7
 volatile unsigned short eg[EGS_LEN];
 static volatile unsigned char egState[EGS_LEN];
 static volatile unsigned short egDividers[EGS_LEN];
@@ -32,7 +34,7 @@ volatile unsigned short lfoEg2BalanceValueForVCFInPanel; // 127 max
 //_________________________________________
 
 static unsigned char waveformType=0;
-
+static unsigned char egMode=0;
 
 void vcos_init(void)
 {
@@ -118,10 +120,16 @@ void vcos_setFrqVCO(unsigned char vcoIndex,unsigned short val)
 
 void vcos_turnOff(unsigned char vcoIndex)
 {
-    egState[vcoIndex] = EG_STATE_START_RELEASE;
-
-    if(egState[EG2_INDEX]!=EG_STATE_IDLE && egState[EG2_INDEX]!=EG_STATE_RUNNING_RELEASE)
-      egState[EG2_INDEX] = EG_STATE_START_RELEASE;
+    //if(egMode==1)
+    {
+      //nthing to to. automatic release
+    }
+    //else
+    {
+        egState[vcoIndex] = EG_STATE_START_RELEASE;
+        if(egState[EG2_INDEX]!=EG_STATE_IDLE && egState[EG2_INDEX]!=EG_STATE_RUNNING_RELEASE)
+          egState[EG2_INDEX] = EG_STATE_START_RELEASE;
+    }
 }
 
 void vcos_setWaveForm(unsigned char val)
@@ -203,8 +211,31 @@ void vcos_egStateMachine(void)
       }
       case EG_STATE_AT_MAX:
       {
+        if(egMode==1) // egmode 1: start release after atack
+        {
+          egState[i] = EG_STATE_RUNNING_SUSTAIN;
+          egCounter[i]=0;
+        }
         break;
       }
+      case EG_STATE_RUNNING_SUSTAIN:
+      {
+        if(egCounter[i]>(eg1Release*48)) 
+        {
+            egCounter[i]=0;
+            eg[i]--;
+            if(eg[i] <= (EG1_MAX_VALUE/4) )
+            {
+              egState[i] = EG_STATE_AT_SUSTAIN;
+            }          
+        }
+        break;
+      }
+      case EG_STATE_AT_SUSTAIN:
+      {
+        break;
+      }
+      
       case EG_STATE_START_RELEASE:
       {
         if(i==EG2_INDEX)
@@ -288,3 +319,9 @@ void vcos_setLfoForVCFModulation(byte value)
 {
   lfoEg2BalanceValueForVCFInPanel =value;
 }
+
+void vcos_setEGmode(byte mode)
+{
+  egMode = mode;
+}
+

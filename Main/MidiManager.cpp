@@ -292,12 +292,7 @@ void midi_repeatManager(void)
         {
           byte vcoIndexToTurnOff = deleteVCOKey(note2PlayForRepeat);
           vcos_turnOff(vcoIndexToTurnOff);
-        }
-            
-        if(thereAreNoKeysPressed())
-        {
-            //digitalWrite(PIN_GATE_SIGNAL,HIGH); // gate=0
-        }
+        }            
       }
     }
   }
@@ -310,10 +305,6 @@ void midi_repeatManager(void)
         repeatRunning=0;
         byte vcoIndexToTurnOff = deleteVCOKey(note2PlayForRepeat);
         vcos_turnOff(vcoIndexToTurnOff);
-        if(thereAreNoKeysPressed())
-        {
-            //digitalWrite(PIN_GATE_SIGNAL,HIGH); // gate=0    
-        }
     }
   }
 }
@@ -372,6 +363,8 @@ void midi_buttonPressedShortCallback(void)
 
     showMode();
 
+    vcos_setEGmode(voicesMode);
+
 //    if(voicesMode==MIDI_MODE_SECUENCER)
 //      seq_startPlay();
 //    else
@@ -379,7 +372,6 @@ void midi_buttonPressedShortCallback(void)
         byte i;
         for(i=0; i<KEYS_PRESSED_LEN; i++)
           keysPressed[i].flagFree=1;
-        //digitalWrite(PIN_GATE_SIGNAL,HIGH); // gate=0  
       seq_stopPlay();
     }
 }
